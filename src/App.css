@@ -36,3 +36,16 @@
     transform: rotate(360deg);
   }
 }
+
+pre, code {
+  font-family: monospace, monospace;
+  text-align: left;
+}
+pre {
+  overflow: auto;
+}
+pre > code {
+  display: block;
+  padding: 1rem;
+  word-wrap: normal;
+}
