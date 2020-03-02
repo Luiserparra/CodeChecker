@@ -54,7 +54,7 @@ class CodeChecker extends React.Component {
             </form>
           </div>
           <div className="col s4">
-
+            <a className="waves-effect waves-light btn-large DownloadBtn"><i className="material-icons right">file_download</i>Download</a>
           </div>
         </div>
       </div>
@@ -101,8 +101,26 @@ class CodeChecker extends React.Component {
     if (this.state.code1 && this.state.code2) {
       let code1 = this.state.code1Txt;
       let code2 = this.state.code2Txt;
+      let code1V = code1.split('\n\n');
+      let code2V = code2.split('\n\n');
+      code1V.pop();
+      code2V.pop();
+      console.log(code1V);
+      console.log(code2V);
+      let code3V;
+      for(var i = 0; i < code1V.length; i++){
+        
+      }
       let res = this.diffString(code1, code2);
-      console.log(res);
+      res = res.replace(/%u2190/g,'&larr;');
+      res = res.replace(/\t /g,'\t');
+      res = res.replace(/%09/g,'\t');
+      //res = res.replace(/\t\t/,'\t');
+      //console.log(res);
+      if ($('.DownloadBtn').parents('.col').children().first().hasClass('card-panel')) {
+        $('.DownloadBtn').parents('.col').children().first().remove();
+      }
+      $('.DownloadBtn').parents('.col').prepend('<div class="card-panel white"><span><pre><code>' + res + '</code></pre></span></div>');
     } else {
       console.log("Falta codigo");
     }
@@ -115,7 +133,7 @@ class CodeChecker extends React.Component {
     n = n.replace(/</g, "&lt;");
     n = n.replace(/>/g, "&gt;");
     n = n.replace(/"/g, "&quot;");
-
+    //n = n.replace(/\t/, "");
     return n;
   }
 
@@ -126,10 +144,10 @@ class CodeChecker extends React.Component {
     n = n.replace(/\s+$/, '');
 
     //Si un String es vacio manda un vector vacio sino manda el String dividido por espacios
-    var out = this.diff(o === "" ? [] : o.split(/\s+/), n === "" ? [] : n.split(/\s+/)); // Posible cambio si es por cada caracter
+    //var out = this.diff(o === "" ? [] : o.split(/\s+/), n === "" ? [] : n.split(/\s+/)); 
+    var out = this.diff(o === "" ? [] : o.split('\n\n').join(' ').split(/ +/), n === "" ? [] : n.split('\n\n').join(' ').split(/ +/)); 
+    console.log(out);
     var str = "";
-
-
     var oSpace = o.match(/\s+/g);
     if (oSpace == null) {
       oSpace = ["\n"];
@@ -145,23 +163,23 @@ class CodeChecker extends React.Component {
 
     if (out.n.length === 0) {
       for (var i = 0; i < out.o.length; i++) {
-        str += '<del>' + escape(out.o[i]) + oSpace[i] + "</del>";
+        str += '<del>' + this.escape(out.o[i]) + "</del>"+oSpace[i] ;
       }
     } else {
       if (out.n[0].text == null) {
         for (n = 0; n < out.o.length && out.o[n].text == null; n++) {
-          str += '<del>' + escape(out.o[n]) + oSpace[n] + "</del>";
+          str += '<del>' + this.escape(out.o[n]) +"</del>"+ oSpace[n] ;
         }
       }
 
       for (var i = 0; i < out.n.length; i++) {
         if (out.n[i].text == null) {
-          str += '<ins>' + escape(out.n[i]) + nSpace[i] + "</ins>";
+          str += '<ins>' + this.escape(out.n[i]) + "</ins>"+ nSpace[i] ;
         } else {
           var pre = "";
 
           for (n = out.n[i].row + 1; n < out.o.length && out.o[n].text == null; n++) {
-            pre += '<del>' + escape(out.o[n]) + oSpace[n] + "</del>";
+            pre += '<del>' + this.escape(out.o[n]) + "</del>"+ oSpace[n-1];
           }
           str += " " + out.n[i].text + nSpace[i] + pre;
         }
@@ -179,11 +197,18 @@ class CodeChecker extends React.Component {
     var ns = new Object();
     var os = new Object();
 
+    console.log(o);
+    console.log(n);
+
+    //Llena el objeto con las posiciones de cada palabra para n
+
     for (var i = 0; i < n.length; i++) {
       if (ns[n[i]] == null)
         ns[n[i]] = { rows: new Array(), o: null };
       ns[n[i]].rows.push(i);
     }
+
+    //Llena el objeto con las posiciones de cada palabra para o
 
     for (var i = 0; i < o.length; i++) {
       if (os[o[i]] == null)
@@ -191,12 +216,19 @@ class CodeChecker extends React.Component {
       os[o[i]].rows.push(i);
     }
 
+    console.log(os);
+    console.log(ns);
+    
+
+    //Va seleccionando las palabras unicas que estan donde deberian estar
     for (var i in ns) {
       if (ns[i].rows.length == 1 && typeof (os[i]) != "undefined" && os[i].rows.length == 1) {
-        n[ns[i].rows[0]] = { text: n[ns[i].rows[0]], row: os[i].rows[0] };
-        o[os[i].rows[0]] = { text: o[os[i].rows[0]], row: ns[i].rows[0] };
+        n[ns[i].rows[0]] = { text: n[ns[i].rows[0]], row: ns[i].rows[0] };
+        o[os[i].rows[0]] = { text: o[os[i].rows[0]], row: os[i].rows[0] };
       }
     }
+
+
 
     for (var i = 0; i < n.length - 1; i++) {
       if (n[i].text != null && n[i + 1].text == null && n[i].row + 1 < o.length && o[n[i].row + 1].text == null &&
