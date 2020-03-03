@@ -161,6 +161,32 @@ class CodeChecker extends React.Component {
       nSpace.push("\n");
     }
 
+    /*
+    for(var i = 0;i < oSpace.length ;i++){
+      oSpace[i] = oSpace[i].replace(/\t+/,'');
+    }                                               // Para resaltar toda la linea toda la linea
+    for(var i = 0;i < nSpace.length ;i++){
+      nSpace[i] = nSpace[i].replace(/\t+/,'');
+    }
+    */
+
+    for(var i = 0; i< out.n.length; i++){
+      if(out.n[i].text!=null){
+        out.n[i].text = out.n[i].text.replace(/\t+/,'');
+      }else{
+        out.n[i] = out.n[i].replace(/\t+/,'');
+      }
+    }
+
+    for(var i = 0; i< out.o.length; i++){
+      if(out.o[i].text!=null){
+        out.o[i].text = out.o[i].text.replace(/\t+/,'');
+      }else{
+        out.o[i] = out.o[i].replace(/\t+/,'');
+      }
+    }
+
+
     if (out.n.length === 0) {
       for (var i = 0; i < out.o.length; i++) {
         str += '<del>' + this.escape(out.o[i]) + "</del>"+oSpace[i] ;
@@ -245,7 +271,6 @@ class CodeChecker extends React.Component {
         o[n[i].row - 1] = { text: o[n[i].row - 1], row: i - 1 };
       }
     }
-
     return { o: o, n: n };
   }
 
