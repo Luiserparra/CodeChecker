@@ -1,8 +1,11 @@
 import React from 'react';
 import './App.css';
+import * as fs from "fs";
+import { Document, Packer, Paragraph, TextRun } from "docx";
 
 var mammoth;
 const $ = window.$;
+var gRes = '';
 class CodeChecker extends React.Component {
   constructor(props) {
     super(props);
@@ -61,6 +64,30 @@ class CodeChecker extends React.Component {
     );
   }
 
+  componentDidMount = () => {
+    //const text = new TextRun({text: "and then underlined ",underline: {},}); //Underline
+    //text.strike(); //Rayar
+    //text.break();  // cambio de linea
+
+    $('.DownloadBtn').click(() => {
+      if (gRes !== '') {
+        const doc = new Document();
+        const paragraph = this.createParagraph();
+        doc.addSection({
+          children: [paragraph],
+        });
+        Packer.toBlob(doc).then((blob) => {
+          var link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = "Código revisado.docx";
+          link.click();
+        });
+      } else {
+        console.log('Nel pa');
+      }
+    });
+  }
+
   parseWordDocxFile = e => {
     let file = e.target.files[0];
     let id = e.target.id;
@@ -76,8 +103,6 @@ class CodeChecker extends React.Component {
     reader.onload = (event) => {
       var arrayBuffer = reader.result;
       mammoth.convertToMarkdown({ arrayBuffer: arrayBuffer }).then((resultObject) => {
-        //console.log(resultObject.value);
-        //console.log(JSON.stringify(resultObject.value));
         let html = resultObject.value;
         html = html.replace(/\\/g, "");
         //html = html.replace(/\n\n/g, "\n");
@@ -101,22 +126,14 @@ class CodeChecker extends React.Component {
     if (this.state.code1 && this.state.code2) {
       let code1 = this.state.code1Txt;
       let code2 = this.state.code2Txt;
-      let code1V = code1.split('\n\n');
-      let code2V = code2.split('\n\n');
-      code1V.pop();
-      code2V.pop();
-      console.log(code1V);
-      console.log(code2V);
-      let code3V;
-      for(var i = 0; i < code1V.length; i++){
-        
-      }
       let res = this.diffString(code1, code2);
-      res = res.replace(/%u2190/g,'&larr;');
-      res = res.replace(/\t /g,'\t');
-      res = res.replace(/%09/g,'\t');
-      //res = res.replace(/\t\t/,'\t');
-      //console.log(res);
+      res = res.replace(/%u2190/g, '&larr;');
+      res = res.replace(/\t /g, '\t');
+      res = res.replace(/%09/g, '\t');
+      res = res.replace(/  /g, ' ');
+      gRes = res;
+      gRes = gRes.replace(/\n\n/g, '\n');
+      gRes = gRes.trim();
       if ($('.DownloadBtn').parents('.col').children().first().hasClass('card-panel')) {
         $('.DownloadBtn').parents('.col').children().first().remove();
       }
@@ -145,8 +162,7 @@ class CodeChecker extends React.Component {
 
     //Si un String es vacio manda un vector vacio sino manda el String dividido por espacios
     //var out = this.diff(o === "" ? [] : o.split(/\s+/), n === "" ? [] : n.split(/\s+/)); 
-    var out = this.diff(o === "" ? [] : o.split('\n\n').join(' ').split(/ +/), n === "" ? [] : n.split('\n\n').join(' ').split(/ +/)); 
-    console.log(out);
+    var out = this.diff(o === "" ? [] : o.split('\n\n').join(' ').split(/ +/), n === "" ? [] : n.split('\n\n').join(' ').split(/ +/));
     var str = "";
     var oSpace = o.match(/\s+/g);
     if (oSpace == null) {
@@ -170,42 +186,42 @@ class CodeChecker extends React.Component {
     }
     */
 
-    for(var i = 0; i< out.n.length; i++){
-      if(out.n[i].text!=null){
-        out.n[i].text = out.n[i].text.replace(/\t+/,'');
-      }else{
-        out.n[i] = out.n[i].replace(/\t+/,'');
+    for (var i = 0; i < out.n.length; i++) {
+      if (out.n[i].text != null) {
+        out.n[i].text = out.n[i].text.replace(/\t+/, '');
+      } else {
+        out.n[i] = out.n[i].replace(/\t+/, '');
       }
     }
 
-    for(var i = 0; i< out.o.length; i++){
-      if(out.o[i].text!=null){
-        out.o[i].text = out.o[i].text.replace(/\t+/,'');
-      }else{
-        out.o[i] = out.o[i].replace(/\t+/,'');
+    for (var i = 0; i < out.o.length; i++) {
+      if (out.o[i].text != null) {
+        out.o[i].text = out.o[i].text.replace(/\t+/, '');
+      } else {
+        out.o[i] = out.o[i].replace(/\t+/, '');
       }
     }
 
 
     if (out.n.length === 0) {
       for (var i = 0; i < out.o.length; i++) {
-        str += '<del>' + this.escape(out.o[i]) + "</del>"+oSpace[i] ;
+        str += '<del>' + this.escape(out.o[i]) + "</del>" + oSpace[i];
       }
     } else {
       if (out.n[0].text == null) {
         for (n = 0; n < out.o.length && out.o[n].text == null; n++) {
-          str += '<del>' + this.escape(out.o[n]) +"</del>"+ oSpace[n] ;
+          str += '<del>' + this.escape(out.o[n]) + "</del>" + oSpace[n];
         }
       }
 
       for (var i = 0; i < out.n.length; i++) {
         if (out.n[i].text == null) {
-          str += '<ins>' + this.escape(out.n[i]) + "</ins>"+ nSpace[i] ;
+          str += '<ins>' + this.escape(out.n[i]) + "</ins>" + nSpace[i];
         } else {
           var pre = "";
 
           for (n = out.n[i].row + 1; n < out.o.length && out.o[n].text == null; n++) {
-            pre += '<del>' + this.escape(out.o[n]) + "</del>"+ oSpace[n-1];
+            pre += '<del>' + this.escape(out.o[n]) + "</del>" + oSpace[n - 1];
           }
           str += " " + out.n[i].text + nSpace[i] + pre;
         }
@@ -222,7 +238,6 @@ class CodeChecker extends React.Component {
     //Cada vector de entrada tiene su vector auxiliar de objetos
     var ns = new Object();
     var os = new Object();
-
     console.log(o);
     console.log(n);
 
@@ -233,7 +248,6 @@ class CodeChecker extends React.Component {
         ns[n[i]] = { rows: new Array(), o: null };
       ns[n[i]].rows.push(i);
     }
-
     //Llena el objeto con las posiciones de cada palabra para o
 
     for (var i = 0; i < o.length; i++) {
@@ -241,16 +255,11 @@ class CodeChecker extends React.Component {
         os[o[i]] = { rows: new Array(), n: null };
       os[o[i]].rows.push(i);
     }
-
-    console.log(os);
-    console.log(ns);
-    
-
     //Va seleccionando las palabras unicas que estan donde deberian estar
     for (var i in ns) {
       if (ns[i].rows.length == 1 && typeof (os[i]) != "undefined" && os[i].rows.length == 1) {
-        n[ns[i].rows[0]] = { text: n[ns[i].rows[0]], row: ns[i].rows[0] };
-        o[os[i].rows[0]] = { text: o[os[i].rows[0]], row: os[i].rows[0] };
+        n[ns[i].rows[0]] = { text: n[ns[i].rows[0]], row: os[i].rows[0] };
+        o[os[i].rows[0]] = { text: o[os[i].rows[0]], row: ns[i].rows[0] };
       }
     }
 
@@ -272,6 +281,58 @@ class CodeChecker extends React.Component {
       }
     }
     return { o: o, n: n };
+  }
+
+  createParagraph() {
+    var paragraph = new Paragraph('');
+    var spaceNchanges = gRes.match(/(<del>.*?<\/del>)|(<ins>.*?<\/ins>)|(\s)/g);
+    console.log(spaceNchanges);
+    var temp = gRes.replace(/(<del>.*?<\/del>)|(<ins>.*?<\/ins>)|(\s)/g, '&empty;');
+    console.log(temp);
+    var all = temp.split(/(&empty;)/);
+    var all = all.filter((el) => {
+      return el != '';
+    });
+    var cont = 0;
+    console.log(all);
+    for (var i = 0; i < all.length; i++) {
+      if (all[i] === '&empty;') {
+        all[i] = spaceNchanges[cont];
+        cont++;
+      }
+    }
+    console.log(all);
+    for (var i = 0; i < all.length; i++) {
+      var txt;
+      if (all[i].includes('<del>')) {
+        var t = all[i].replace('<del>', '').replace('</del>', '');
+        txt = new TextRun({
+          text: t,
+          color: 'FF1010',
+          strike: true
+        });
+        paragraph.addChildElement(txt);
+      } else {
+        if (all[i].includes('<ins>')) {
+          var t = all[i].replace('<ins>', '').replace('</ins>', '');
+          txt = new TextRun({
+            text: t,
+            underline: {},
+            color: '10FF10'
+          });
+          paragraph.addChildElement(txt);
+        }else{
+          if(all[i]==='\n'){
+            txt = new TextRun('').break();
+            paragraph.addChildElement(txt);
+          }else{
+            txt = new TextRun(all[i]);
+            paragraph.addChildElement(txt);
+          }
+        }
+      }
+    }
+    return paragraph;
   }
 
 }
