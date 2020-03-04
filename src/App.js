@@ -83,7 +83,6 @@ class CodeChecker extends React.Component {
           link.click();
         });
       } else {
-        console.log('Nel pa');
       }
     });
   }
@@ -139,7 +138,6 @@ class CodeChecker extends React.Component {
       }
       $('.DownloadBtn').parents('.col').prepend('<div class="card-panel white"><span><pre><code>' + res + '</code></pre></span></div>');
     } else {
-      console.log("Falta codigo");
     }
   }
 
@@ -238,8 +236,6 @@ class CodeChecker extends React.Component {
     //Cada vector de entrada tiene su vector auxiliar de objetos
     var ns = new Object();
     var os = new Object();
-    console.log(o);
-    console.log(n);
 
     //Llena el objeto con las posiciones de cada palabra para n
 
@@ -286,22 +282,18 @@ class CodeChecker extends React.Component {
   createParagraph() {
     var paragraph = new Paragraph('');
     var spaceNchanges = gRes.match(/(<del>.*?<\/del>)|(<ins>.*?<\/ins>)|(\s)/g);
-    console.log(spaceNchanges);
     var temp = gRes.replace(/(<del>.*?<\/del>)|(<ins>.*?<\/ins>)|(\s)/g, '&empty;');
-    console.log(temp);
     var all = temp.split(/(&empty;)/);
     var all = all.filter((el) => {
       return el != '';
     });
     var cont = 0;
-    console.log(all);
     for (var i = 0; i < all.length; i++) {
       if (all[i] === '&empty;') {
         all[i] = spaceNchanges[cont];
         cont++;
       }
     }
-    console.log(all);
     for (var i = 0; i < all.length; i++) {
       var txt;
       if (all[i].includes('<del>')) {
